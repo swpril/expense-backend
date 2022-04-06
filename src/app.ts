@@ -3,13 +3,13 @@ import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
 import compression from 'compression';
 import cors from 'cors';
-import routes from '@/routes';
-import { morganSuccessHandler, morganErrorHandler } from '@/config/morgan';
-import { IS_TEST, APP_PREFIX_PATH } from '@/config/config';
 import httpStatus from 'http-status';
-import ApiError from './utils/ApiError';
+
+import routes from './routes';
+import { morganSuccessHandler, morganErrorHandler } from './config/morgan';
+import { IS_TEST, APP_PREFIX_PATH } from './config/config';
+import { ApiError } from './utils/ApiError';
 import { errorConverter, errorHandler } from './middlewares/error';
-import swaggerUi from 'swagger-ui-express';
 
 const app = express();
 

@@ -1,102 +1,82 @@
-import { Schema, Document, model } from 'mongoose';
-import crypto from 'crypto';
+import { Schema, model } from 'mongoose';
 import jwt from 'jsonwebtoken';
-import { JWT_EXPIRE, JWT_SECRET } from '@/config/config';
-import privateValidator from 'mongoose-private';
+import * as bcrypt from 'bcrypt';
 
-export interface IUser {
-  first_name: string;
-  last_name: string;
-  email: string;
-  hash_password: string;
-  salt: string;
-}
-
-export interface IUserToAuthJSON {
-  first_name: string;
-  last_name: string;
-  name: string;
-  email: string;
-}
-
-export default interface IUserModel extends Document, IUser {
-  setPassword(password: string): void;
-  validPassword(password: string): boolean;
-  toAuthJSON(): IUserToAuthJSON;
-  generateJWT(): string;
-  generateAccessJWT(): string;
-  name: string;
-}
+import { JWT_EXPIRE, JWT_SECRET } from '../config/config';
+import { IUserModel } from '../interface';
 
 const schema = new Schema<IUserModel>(
   {
-    first_name: {
+    username: {
       type: String,
       required: true,
-      minlength: 3,
+      minlength: 5,
+      trim: true
     },
-    last_name: {
+    firstName: {
       type: String,
       required: true,
+      trim: true
+    },
+    lastName: {
+      type: String,
+      required: true,
+      trim: true
     },
     email: {
       type: String,
       required: true,
-      unique: true,
+      trim: true
     },
-    hash_password: {
+    password: {
       type: String,
-      private: true,
+      required: true,
+      minlength: 8,
+      trim: true
     },
-    salt: {
-      type: String,
-      private: true,
-    },
+    expense: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Expense'
+      }
+    ]
   },
   {
-    timestamps: true,
-  },
+    timestamps: true
+  }
 );
 
-// Plugins
-schema.plugin(privateValidator);
-
-schema.virtual('name').get(function (this: IUserModel) {
-  return `${this.first_name} ${this.last_name}`;
+schema.pre('save', async function () {
+  this.password = await bcrypt.hash(this.password, 10);
 });
 
-schema.methods.setPassword = function (password: string) {
-  this.salt = crypto.randomBytes(16).toString('hex');
-  this.hash_password = crypto.pbkdf2Sync(password, this.salt, 10000, 512, 'sha512').toString('hex');
-};
-
-schema.methods.validPassword = function (password: string): boolean {
-  const hash = crypto.pbkdf2Sync(password, this.salt, 10000, 512, 'sha512').toString('hex');
-  return this.hash_password === hash;
+schema.methods.validPassword = function (password: string): Promise<boolean> {
+  console.log('password', password, this.password);
+  return bcrypt.compare(password, this.password);
 };
 
 schema.methods.generateJWT = function (): string {
   return jwt.sign(
     {
       id: this._id,
-      name: this.name,
-      email: this.email,
+      firstName: this.firstName,
+      lastName: this.lastName,
+      email: this.email
     },
     JWT_SECRET,
     {
-      expiresIn: JWT_EXPIRE,
-    },
+      expiresIn: JWT_EXPIRE
+    }
   );
 };
 
 schema.methods.toAuthJSON = function () {
-  const { first_name, last_name, name, email } = this;
+  const { firstName, lastName, email } = this;
   return {
-    name,
-    first_name,
-    last_name,
+    firstName,
+    lastName,
     email,
-    token: this.generateJWT(),
+    token: this.generateJWT()
   };
 };
 
