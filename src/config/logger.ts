@@ -1,5 +1,5 @@
 import winston from 'winston';
-import { IS_PRODUCTION } from '@/config/config';
+import { IS_PRODUCTION } from './config';
 
 const enumerateErrorFormat = winston.format(info => {
   if (info instanceof Error) {
@@ -8,19 +8,17 @@ const enumerateErrorFormat = winston.format(info => {
   return info;
 });
 
-const logger = winston.createLogger({
+export const logger = winston.createLogger({
   level: IS_PRODUCTION ? 'info' : 'debug',
   format: winston.format.combine(
     enumerateErrorFormat(),
     winston.format.colorize(),
     winston.format.splat(),
-    winston.format.printf(({ level, message }) => `${level}: ${message}`),
+    winston.format.printf(({ level, message }) => `${level}: ${message}`)
   ),
   transports: [
     new winston.transports.Console({
-      stderrLevels: ['error'],
-    }),
-  ],
+      stderrLevels: ['error']
+    })
+  ]
 });
-
-export default logger;
