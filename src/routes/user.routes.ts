@@ -1,17 +1,7 @@
-/**
- * @openapi
- * /:
- *   get:
- *     description: Welcome to swagger-jsdoc!
- *     responses:
- *       200:
- *         description: Returns a mysterious string.
- */
-
 import express, { Request, Response } from 'express';
 import httpStatus from 'http-status';
 
-import { User } from '../models';
+import { Expense, User } from '../models';
 
 const router = express.Router();
 
@@ -32,8 +22,9 @@ router.post('/login', async (req: Request, res: Response) => {
   res.status(httpStatus.OK).json(user.toAuthJSON());
 });
 
-router.post('/register', async (req, res) => {
-  const user = new User({ ...req.body });
+router.post('/register', async (req: Request, res: Response) => {
+  const { username, email, password, firstName, lastName } = req.body;
+  const user = new User({ username, email, password, firstName, lastName });
   await user.save();
   res.status(httpStatus.CREATED).json(user.toAuthJSON());
 });
@@ -46,10 +37,6 @@ router.post('/:username', async (req: Request, res: Response) => {
     return;
   }
   res.status(httpStatus.OK).json(true);
-});
-
-router.get('/me', async (req: Request, res: Response) => {
-  res.send(req.user);
 });
 
 export default router;

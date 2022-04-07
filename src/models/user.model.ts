@@ -34,10 +34,10 @@ const schema = new Schema<IUserModel>(
       minlength: 8,
       trim: true
     },
-    expense: [
+    expenses: [
       {
         type: Schema.Types.ObjectId,
-        ref: 'Expense'
+        ref: 'Expenses'
       }
     ]
   },
@@ -51,7 +51,6 @@ schema.pre('save', async function () {
 });
 
 schema.methods.validPassword = function (password: string): Promise<boolean> {
-  console.log('password', password, this.password);
   return bcrypt.compare(password, this.password);
 };
 
