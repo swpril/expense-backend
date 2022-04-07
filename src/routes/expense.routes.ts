@@ -74,8 +74,12 @@ router.put('/:id', auth, async (req: Request, res: Response) => {
 });
 
 router.delete('/:id', auth, async (req: Request, res: Response) => {
-  const expense = await Expense.findByIdAndDelete(Types.ObjectId(req.params.id));
+  const user = req.user as unknown as IUser & { id: string };
+  const dbUser = (await User.findById(user.id)) as IUserModel;
 
+  const expense = await Expense.findByIdAndDelete(Types.ObjectId(req.params.id));
+  dbUser.expenses = dbUser?.expenses.filter(exp => exp.toString() !== expense?._id.toString());
+  await dbUser.save();
   if (!expense) {
     res.status(404).send('Expense not found');
     return;
