@@ -9,7 +9,7 @@ import routes from './routes';
 import { morganSuccessHandler, morganErrorHandler } from './config/morgan';
 import { IS_TEST, APP_PREFIX_PATH } from './config/config';
 import { ApiError } from './utils/ApiError';
-import { errorConverter, errorHandler } from './middlewares/error';
+import { errorConverter, errorHandler } from './middleware/error';
 
 const app = express();
 

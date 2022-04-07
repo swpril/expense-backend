@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { ApiError } from '../utils/ApiError';
 import mongoose from 'mongoose';
 import httpStatus from 'http-status';
