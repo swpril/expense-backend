@@ -37,7 +37,7 @@ const schema = new Schema<IUserModel>(
     expenses: [
       {
         type: Schema.Types.ObjectId,
-        ref: 'Expenses'
+        ref: 'Expense'
       }
     ]
   },
@@ -46,11 +46,13 @@ const schema = new Schema<IUserModel>(
   }
 );
 
-schema.pre('save', async function () {
+schema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+
   this.password = await bcrypt.hash(this.password, 10);
 });
 
-schema.methods.validPassword = function (password: string): Promise<boolean> {
+schema.methods.validPassword = async function (password: string): Promise<boolean> {
   return bcrypt.compare(password, this.password);
 };
 
@@ -71,11 +73,13 @@ schema.methods.generateJWT = function (): string {
 
 schema.methods.toAuthJSON = function () {
   const { firstName, lastName, email } = this;
+
   return {
     firstName,
     lastName,
     email,
-    token: this.generateJWT()
+    token: this.generateJWT(),
+    expenses: this.expenses
   };
 };
 

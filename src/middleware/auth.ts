@@ -19,10 +19,9 @@ export const auth = (req: Request, res: Response, next: Function) => {
       if (!!error) {
         res.status(403).json();
         return;
-      } else {
-        req.user = { ...user };
-        next();
       }
+      req.user = { ...user };
+      next();
     }
   );
 };

@@ -1,13 +1,13 @@
 import express, { Request, Response } from 'express';
 import httpStatus from 'http-status';
 
-import { Expense, User } from '../models';
+import { User } from '../models';
 
 const router = express.Router();
 
 router.post('/login', async (req: Request, res: Response) => {
   const { username, password } = req.body;
-  const user = await User.findOne({ username });
+  const user = await User.findOne({ username }).populate('expenses').exec();
 
   if (!user) {
     res.status(404).send('User not found');
