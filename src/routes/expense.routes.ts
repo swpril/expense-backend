@@ -8,6 +8,27 @@ import { Expense, User } from '../models';
 
 const router = express.Router();
 
+const tabMap = {
+  category: {
+    category: '$category'
+  },
+  year: {
+    year: '$year'
+  },
+  month: {
+    month: '$month',
+    year: '$year'
+  },
+  week: {
+    week: {
+      $week: { $toDate: '$isoDate' }
+    }
+  },
+  type: {
+    type: '$type'
+  }
+};
+
 router.post('/', auth, async (req: Request, res: Response) => {
   const { amount, category, type, description, date } = req.body;
   const user = req.user as unknown as IUser & { id: string };
@@ -21,11 +42,11 @@ router.post('/', auth, async (req: Request, res: Response) => {
     category,
     type,
     description,
-    date,
     userId: Types.ObjectId(user.id),
     dd: expenseDate.getDate(),
     mm: expenseDate.getMonth() + 1,
-    yy: expenseDate.getFullYear()
+    yy: expenseDate.getFullYear(),
+    isoDate: expenseDate.toISOString()
   });
 
   dbUser.expenses = dbUser?.expenses.concat(expense._id);
@@ -36,7 +57,37 @@ router.post('/', auth, async (req: Request, res: Response) => {
 
 router.get('/', auth, async (req: Request, res: Response) => {
   const user = req.user as unknown as IUser & { id: string };
-  const expenses = await Expense.find({ userId: Types.ObjectId(user.id) });
+  const tab = (req.query.tab ?? 'category') as unknown as string;
+
+  const expenses = await Expense.aggregate([
+    { $match: { userId: Types.ObjectId(user.id) } },
+    {
+      $project: {
+        amount: 1,
+        month: '$mm',
+        year: '$yy',
+        category: 1,
+        day: '$dd',
+        type: 1,
+        isoDate: 1
+      }
+    },
+    {
+      $group: {
+        _id: {
+          ...tabMap[tab]
+        },
+        id: { $addToSet: '$_id' },
+        month: { $addToSet: '$month' },
+        amount: { $sum: '$amount' },
+        day: { $addToSet: '$day' },
+        category: { $addToSet: '$category' },
+        type: { $addToSet: '$type' },
+        date: { $addToSet: '$isoDate' }
+      }
+    }
+  ]);
+
   if (!expenses) {
     res.status(404).send('Expenses not found');
     return;

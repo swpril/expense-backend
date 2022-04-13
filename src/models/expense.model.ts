@@ -29,12 +29,6 @@ const schema = new Schema<IExpense>({
     required: false,
     trim: true
   },
-  date: {
-    type: Date,
-    required: false,
-    trim: true,
-    default: Date.now()
-  },
   dd: {
     type: Number,
     required: true
@@ -46,6 +40,11 @@ const schema = new Schema<IExpense>({
   yy: {
     type: Number,
     required: true
+  },
+  isoDate: {
+    type: String,
+    required: true,
+    trim: true
   }
 });
 
